@@ -26,6 +26,30 @@ def get_hog_features(img, orient, pix_per_cell, cell_per_block, vis=False, featu
         return features
 
 
+def convert_color(img, cspace):
+    """
+    Converts color space from RGB to cspace
+    :param img: The original image
+    :param cspace: The target color space
+    :return: The converted image
+    """
+    if cspace == 'HSV':
+        feature_image = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
+    elif cspace == 'LUV':
+        feature_image = cv2.cvtColor(img, cv2.COLOR_RGB2LUV)
+    elif cspace == 'HLS':
+        feature_image = cv2.cvtColor(img, cv2.COLOR_RGB2HLS)
+    elif cspace == 'YUV':
+        feature_image = cv2.cvtColor(img, cv2.COLOR_RGB2YUV)
+    elif cspace == 'YCrCb':
+        feature_image = cv2.cvtColor(img, cv2.COLOR_RGB2YCrCb)
+    elif cspace == 'RGB' or cspace == 'Keep':
+        feature_image = np.copy(img)
+    else:
+        raise ValueError("Unknown color_space", cspace)
+    return feature_image
+
+
 def bin_spatial(img, size=(32, 32)):
     """
     Computes binned color features
@@ -70,20 +94,7 @@ def extract_features(img, cspace='RGB', spatial_size=(32, 32), hist_bins=32, ori
     :return: A concatenated features vector
     """
     file_features = []
-    if cspace == 'HSV':
-        feature_image = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
-    elif cspace == 'LUV':
-        feature_image = cv2.cvtColor(img, cv2.COLOR_RGB2LUV)
-    elif cspace == 'HLS':
-        feature_image = cv2.cvtColor(img, cv2.COLOR_RGB2HLS)
-    elif cspace == 'YUV':
-        feature_image = cv2.cvtColor(img, cv2.COLOR_RGB2YUV)
-    elif cspace == 'YCrCb':
-        feature_image = cv2.cvtColor(img, cv2.COLOR_RGB2YCrCb)
-    elif cspace == 'RGB':
-        feature_image = np.copy(img)
-    else:
-        raise ValueError("Unknown color_space", cspace)
+    feature_image = convert_color(img, cspace)
 
     if spatial_feat:
         spatial_features = bin_spatial(feature_image, size=spatial_size)
