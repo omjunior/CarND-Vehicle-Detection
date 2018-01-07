@@ -39,7 +39,21 @@ class VideoProcessor:
         heatmap = np.zeros_like(img[:, :, 0]).astype(np.float)
         for frame in self.prev_frames:
             heatmap = add_heat(heatmap, frame)
+        acc_heatmap = np.copy(heatmap)
 
         bboxes = find_bboxes_from_heatmap(apply_threshold(heatmap, self.settings['heat_threshold']))
 
-        return draw_boxes(img, bboxes)
+        if self.settings['DEBUG']:
+            single_heatmap = np.clip(add_heat(np.zeros_like(img[:, :, 0]).astype(np.float),
+                                              self.prev_frames[len(self.prev_frames)-1]), 0, 255)
+            single_heatmap = np.dstack((single_heatmap, single_heatmap, single_heatmap))
+            acc_heatmap = np.clip(acc_heatmap, 0, 255)
+            acc_heatmap = np.dstack((acc_heatmap, acc_heatmap, acc_heatmap))
+            from scipy.ndimage.measurements import label
+            labels = np.clip(label(heatmap)[0], 0, 1)*255
+            labels = np.dstack((labels, labels, labels))
+            final = draw_boxes(img, bboxes)
+            return np.concatenate((np.concatenate((single_heatmap, acc_heatmap), axis=1),
+                                   np.concatenate((labels, final), axis=1)), axis=0)
+        else:
+            return draw_boxes(img, bboxes)

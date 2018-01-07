@@ -13,6 +13,7 @@ def load_settings():
                                [100, 1180, 400, 550, 1.5],
                                [0, 1280, 380, 600, 2],
                                [0, 1280, 380, 700, 3]],
-            'n_frames':       5,  # Heat map
-            'heat_threshold': 10  # Heat map
+            'n_frames':       13,  # Heat map
+            'heat_threshold': 60,  # Heat map
+            'DEBUG': True
             }
