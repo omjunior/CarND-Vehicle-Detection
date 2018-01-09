@@ -12,8 +12,10 @@ def load_settings():
             'scales':         [[200, 1080, 400, 500, 1],  # [ xmin, xmax, ymin, ymax, scale ]
                                [100, 1180, 400, 550, 1.5],
                                [0, 1280, 380, 600, 2],
+                               [0, 1280, 380, 650, 2.5],
                                [0, 1280, 380, 700, 3]],
             'n_frames':       13,  # Heat map
-            'heat_threshold': 60,  # Heat map
-            'DEBUG': True
+            'heat_threshold': 3,   # Heat map
+            'min_conf': 0.6,  # clf
+            'DEBUG': False
             }

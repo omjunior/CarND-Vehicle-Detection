@@ -21,8 +21,8 @@ def draw_boxes(img, bboxes, color=(0, 0, 255), thick=6):
 
 
 # Define a single function that can extract features using hog sub-sampling and make predictions
-def find_cars(img, xstart, xstop, ystart, ystop, scale, svc, scaler, cspace, orient, pix_per_cell, cell_per_block,
-              spatial_size, hist_bins):
+def find_cars(img, xstart, xstop, ystart, ystop, scale, clf, scaler, cspace, orient, pix_per_cell, cell_per_block,
+              spatial_size, hist_bins, log=None, min_conf=0.4):
 
     img_tosearch = img[ystart:ystop, xstart:xstop, :]
     ctrans_tosearch = convert_color(img_tosearch, cspace)
@@ -73,9 +73,16 @@ def find_cars(img, xstart, xstop, ystart, ystop, scale, svc, scaler, cspace, ori
 
             # Scale features and make a prediction
             test_features = scaler.transform(np.hstack((spatial_features, hist_features, hog_features)).reshape(1, -1))
-            test_prediction = svc.predict(test_features)
+            test_prediction = clf.predict(test_features)
+            conf = clf.decision_function(test_features)
 
-            if test_prediction == 1:
+            if log is not None:
+                if scale not in log:
+                    log[scale] = [0, 0]
+                log[scale][1] += 1
+                if test_prediction == 1 and conf > min_conf:
+                    log[scale][0] += 1
+            if test_prediction == 1 and conf > min_conf:
                 xbox_left = np.int(xleft * scale)
                 ytop_draw = np.int(ytop * scale)
                 win_draw = np.int(window * scale)

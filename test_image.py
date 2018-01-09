@@ -23,7 +23,8 @@ for file in glob.glob("./test_images/*.jpg"):
     for scale in settings['scales']:
         found.extend(find_cars(image, scale[0], scale[1], scale[2], scale[3], scale[4], clf, scaler,
                                settings['color_space'], settings['orient'], settings['pix_per_cell'],
-                               settings['cell_per_block'], settings['spatial_size'], settings['hist_bins']))
+                               settings['cell_per_block'], settings['spatial_size'], settings['hist_bins'],
+                               min_conf=settings['min_conf']))
 
     window_img = draw_boxes(draw_image, found, color=(0, 0, 255), thick=4)
 
