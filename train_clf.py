@@ -3,15 +3,17 @@ import time
 import pickle
 import cv2
 import numpy as np
-from random import shuffle
 from sklearn.svm import LinearSVC
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.externals import joblib
 
 from settings import load_settings
-from feature import extract_features
+from features import extract_features
 
+"""
+Load the training images, extracts features and train a classifier, saving the results into pickle files
+"""
 
 # Divide up into cars and notcars
 cars = []
@@ -32,13 +34,6 @@ notcars.extend(images)
 images = glob.glob('./train/non-vehicles/Extras/*.png')
 notcars.extend(images)
 
-# Reduce the sample size
-# sample_size = 1000
-# shuffle(cars)
-# shuffle(notcars)
-# cars = cars[0:sample_size]
-# notcars = notcars[0:sample_size]
-
 print("Cars:", len(cars), ", Not Cars:", len(notcars))
 
 settings = load_settings()
@@ -49,20 +44,16 @@ car_features = []
 for car in cars:
     img = cv2.imread(car)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    feature = extract_features(img, cspace=settings['color_space'], spatial_size=settings['spatial_size'],
-                               hist_bins=settings['hist_bins'], orient=settings['orient'],
-                               pix_per_cell=settings['pix_per_cell'], cell_per_block=settings['cell_per_block'],
-                               hog_channel='ALL', spatial_feat=True, hist_feat=True, hog_feat=True)
+    feature = extract_features(img, settings['color_space'], settings['spatial_size'], settings['hist_bins'],
+                               settings['orient'], settings['pix_per_cell'], settings['cell_per_block'])
     car_features.append(feature)
 
 notcar_features = []
 for not_car in notcars:
     img = cv2.imread(not_car)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    feature = extract_features(img, cspace=settings['color_space'], spatial_size=settings['spatial_size'],
-                               hist_bins=settings['hist_bins'], orient=settings['orient'],
-                               pix_per_cell=settings['pix_per_cell'], cell_per_block=settings['cell_per_block'],
-                               hog_channel='ALL', spatial_feat=True, hist_feat=True, hog_feat=True)
+    feature = extract_features(img, settings['color_space'], settings['spatial_size'], settings['hist_bins'],
+                               settings['orient'], settings['pix_per_cell'], settings['cell_per_block'])
     notcar_features.append(feature)
 
 t2 = time.time()
@@ -77,13 +68,13 @@ scaled_X = X_scaler.transform(X)
 y = np.hstack((np.ones(len(car_features)), np.zeros(len(notcar_features))))
 
 # Split up data into randomized training and test sets
-# TODO: Take into consideration the time correlation between the pictures
+# TODO: Take into consideration the time correlation between the images
 rand_state = np.random.randint(0, 100)
 X_train, X_test, y_train, y_test = train_test_split(scaled_X, y, test_size=0.2, random_state=rand_state)
 
 print('Feature vector length:', len(X_train[0]))
 # Use a SVC
-parameters = {'C': (0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1)}
+parameters = {'C': (0.0001, 0.0003, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1)}
 svc = LinearSVC()
 clf = GridSearchCV(svc, parameters)
 # Check the training time for the SVC

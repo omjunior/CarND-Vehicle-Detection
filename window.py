@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 from scipy.ndimage.measurements import label
 
-from feature import color_hist, bin_spatial, convert_color, extract_features, get_hog_features
+from features import color_hist, bin_spatial, convert_color, get_hog_features
 
 
 def draw_boxes(img, bboxes, color=(0, 0, 255), thick=6):
@@ -20,10 +20,32 @@ def draw_boxes(img, bboxes, color=(0, 0, 255), thick=6):
     return draw_img
 
 
-# Define a single function that can extract features using hog sub-sampling and make predictions
 def find_cars(img, xstart, xstop, ystart, ystop, scale, clf, scaler, cspace, orient, pix_per_cell, cell_per_block,
               spatial_size, hist_bins, log=None, min_conf=0.4):
-
+    """
+    A function that find cars in a frame.
+    It takes a region of interest of an image, converts it to a given color space, and runs a sliding window search
+    through the image searching for matches by extracting a series of features and feeding them to the provided
+    (trained) classifier, returning a list of found matches.
+    The features computed are: HOG (using sub-sampling), spatial binning and color histogram.
+    :param img: The input image
+    :param xstart: Minimum X coordinate defining the region of interest
+    :param xstop: Maximum X coordinate defining the region of interest
+    :param ystart: Minimum Y coordinate defining the region of interest
+    :param ystop: Maximum Y coordinate defining the region of interest
+    :param scale: Defines the size of the window (scale * (64, 64))
+    :param clf: The trained classifier
+    :param scaler: A trained scaler used to normalize the features
+    :param cspace: The target color space for the image before extracting features
+    :param orient: The number of HOG orientations bins for the histogram
+    :param pix_per_cell: 2-tuple specifying the size of each cell for extracting HOG
+    :param cell_per_block:  2-tuple defining the area (in cells) over which normalization is performed during HOG
+    :param spatial_size: 2-tuple defining the size for spatial binning
+    :param hist_bins: The number of bins for each channel of color histogram
+    :param log: A dictionary to log how many windows were searched and how many found cars
+    :param min_conf: The minimum prediction confidence score to approve a prediction
+    :return: A list of bounding boxes for every positive prediction from the classifier
+    """
     img_tosearch = img[ystart:ystop, xstart:xstop, :]
     ctrans_tosearch = convert_color(img_tosearch, cspace)
     if scale != 1:
@@ -41,6 +63,7 @@ def find_cars(img, xstart, xstop, ystart, ystop, scale, clf, scaler, cspace, ori
     # 64 was the original sampling rate, with 8 cells and 8 pix per cell
     window = 64
     nblocks_per_window = (window // pix_per_cell) - cell_per_block + 1
+    # With the definition below, an overlap of 75% is defined
     cells_per_step = 1  # Instead of overlap, define how many cells to step
     nxsteps = (nxblocks - nblocks_per_window) // cells_per_step + 1
     nysteps = (nyblocks - nblocks_per_window) // cells_per_step + 1
@@ -68,20 +91,22 @@ def find_cars(img, xstart, xstop, ystart, ystop, scale, clf, scaler, cspace, ori
             subimg = cv2.resize(ctrans_tosearch[ytop:ytop + window, xleft:xleft + window], (64, 64))
 
             # Get color features
-            spatial_features = bin_spatial(subimg, size=spatial_size)
-            hist_features = color_hist(subimg, nbins=hist_bins)
+            spatial_features = bin_spatial(subimg, spatial_size)
+            hist_features = color_hist(subimg, hist_bins)
 
             # Scale features and make a prediction
             test_features = scaler.transform(np.hstack((spatial_features, hist_features, hog_features)).reshape(1, -1))
             test_prediction = clf.predict(test_features)
             conf = clf.decision_function(test_features)
 
+            # Record prediction
             if log is not None:
                 if scale not in log:
                     log[scale] = [0, 0]
                 log[scale][1] += 1
                 if test_prediction == 1 and conf > min_conf:
                     log[scale][0] += 1
+
             if test_prediction == 1 and conf > min_conf:
                 xbox_left = np.int(xleft * scale)
                 ytop_draw = np.int(ytop * scale)
@@ -116,6 +141,11 @@ def apply_threshold(heatmap, threshold):
 
 
 def find_bboxes_from_heatmap(heatmap):
+    """
+    Compute bounding boxes for each detection in a heatmap
+    :param heatmap: The (thresholded) heatmap to search
+    :return: A list of bounding boxes representing the location of each car
+    """
     labels = label(heatmap)
     bboxes = []
     for car_number in range(1, labels[1]+1):

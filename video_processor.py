@@ -1,4 +1,5 @@
 import pickle
+import cv2
 import numpy as np
 from sklearn.externals import joblib
 
@@ -57,16 +58,17 @@ class VideoProcessor:
                                                           self.settings['heat_threshold'] ** self.settings['n_frames']))
 
         if self.settings['DEBUG']:
-            single_heatmap = np.clip(add_heat(np.zeros_like(img[:, :, 0]).astype(np.float), found), 0, 255)
-            single_heatmap = single_heatmap / np.max(single_heatmap) * 255
+            single_heatmap = add_heat(np.zeros_like(img[:, :, 0]).astype(np.float), found)
+            single_heatmap = np.clip(single_heatmap, 0, 255)
             single_heatmap = np.dstack((single_heatmap, single_heatmap, single_heatmap))
-            acc_heatmap = acc_heatmap / np.max(acc_heatmap) * 255
+            acc_heatmap = np.sqrt(acc_heatmap)
+            acc_heatmap = np.clip(acc_heatmap, 0, 255)
             acc_heatmap = np.dstack((acc_heatmap, acc_heatmap, acc_heatmap))
-            from scipy.ndimage.measurements import label
-            labels = np.clip(label(heatmap)[0], 0, 1)*255
+            labels = np.clip(heatmap, 0, 1)*255
             labels = np.dstack((labels, labels, labels))
             final = draw_boxes(img, bboxes)
-            return np.concatenate((np.concatenate((single_heatmap, acc_heatmap), axis=1),
-                                   np.concatenate((labels, final), axis=1)), axis=0)
+            frame = np.concatenate((np.concatenate((single_heatmap, acc_heatmap), axis=1),
+                                    np.concatenate((labels, final), axis=1)), axis=0)
+            return cv2.resize(frame, (int(frame.shape[1]/2), int(frame.shape[0]/2)))
         else:
             return draw_boxes(img, bboxes)
