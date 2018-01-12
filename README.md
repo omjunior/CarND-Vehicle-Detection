@@ -39,11 +39,6 @@ The goals of this project are the following:
 [frame175]: ./writeup/frame_017_labels.jpg
 [frame176]: ./writeup/frame_017_output.jpg
 
-[//]: # (Videos)
-[in_video]: ./project_video.mp4
-[out_video]: ./output_video/project_video.mp4
-[debug_video]: ./output_video/project_video_debug.mp4
-
 
 ## Training the Linear SVC
 
@@ -124,18 +119,18 @@ In order to account for the frame processing in sequence, a ```VideoProcessor```
 
 Follow an example of a sequence of frames from a video.
 
- | | | |
-:---:|:---:|:---:|:---:
-**Input** | ![frame151] | ![frame161] | ![frame171]
-**SVM positives** | ![frame152] | ![frame162] | ![frame172]
-**Frame heatmap** | ![frame153] | ![frame163] | ![frame173]
-**Accumulated heatmap** | ![frame154] | ![frame164] | ![frame174]
-**Thresholded** | ![frame155] | ![frame165] | ![frame175]
-**Final** | ![frame156] | ![frame166] | ![frame176]
+|                         |             |             |             |
+|:-----------------------:|:-----------:|:-----------:|:-----------:|
+| **Input**               | ![frame151] | ![frame161] | ![frame171] |
+| **SVM positives**       | ![frame152] | ![frame162] | ![frame172] |
+| **Frame heatmap**       | ![frame153] | ![frame163] | ![frame173] |
+| **Accumulated heatmap** | ![frame154] | ![frame164] | ![frame174] |
+| **Thresholded**         | ![frame155] | ![frame165] | ![frame175] |
+| **Final**               | ![frame156] | ![frame166] | ![frame176] |
 
 ### Results
 
-By applying the algorithm to the [input video](in_video) with debug settings on, the following [debug video](debug_video) was generated. This was the final [output video](out_video).
+By applying the algorithm to the [input video](./project_video.mp4) with debug settings on, the following [debug video](./output_video/project_video_debug.mp4) was generated. This was the final [output video](./output_video/project_video.mp4).
 
 In the debug version it is possible to see the heatmaps and thresholds together with the output frame.
 
